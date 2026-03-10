@@ -4,6 +4,8 @@ from scalar_fastapi import get_scalar_api_reference
 # from dotenv import load_dotenv
 from app.modules.research.schema import ResearchInput
 from app.modules.research.tasks import research_task
+from app.modules.content.schema import ContentInput
+from app.modules.content.tasks import content_task
 
 # load_dotenv()
 
@@ -13,6 +15,12 @@ app = FastAPI()
 @app.post("/research")
 def do_research(body: ResearchInput):
     research_task.delay(body.topic)
+    return {"message": "Processing!"}
+
+
+@app.post("/content")
+def do_content(body: ContentInput):
+    content_task.delay(body.topic, body.target_audience, body.tone)
     return {"message": "Processing!"}
 
 

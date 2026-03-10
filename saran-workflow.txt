@@ -1,0 +1,116 @@
+====================================================
+SARAN PENAMBAHAN WORKFLOW - AGENTIC WORKFLOW PROJECT
+====================================================
+
+PROJECT SAAT INI
+-----------------
+Sudah ada 1 workflow: Deep Research Workflow
+- Endpoint : POST /research
+- Alur     : User input topic -> Generate 5 queries -> Search web (Tavily)
+             -> Summarize hasil -> Generate report -> Export PDF
+- Files    : app/modules/research/
+
+
+====================================================
+SARAN STRUKTUR FOLDER
+====================================================
+
+Ikuti pola yang sudah ada, setiap workflow sebagai module terpisah:
+
+app/modules/
+├── research/       <- sudah ada
+├── summarizer/     <- workflow baru 1
+└── content/        <- workflow baru 2
+
+Setiap module berisi file:
+- __init__.py
+- schema.py
+- prompt.py
+- methods.py
+- tasks.py
+
+
+====================================================
+WORKFLOW BARU 1: Document Summarizer
+====================================================
+
+Endpoint : POST /summarize
+
+Ide:
+User upload/paste dokumen panjang -> AI summarize -> export ke PDF
+
+Alur:
+User Input (teks panjang / URL artikel)
+      |
+      v
+Extract & chunk teks
+      |
+      v
+Summarize per chunk (paralel)
+      |
+      v
+Merge & generate final summary
+      |
+      v
+Export ke PDF
+
+Catatan:
+- Pola methods.py-nya mirip dengan research
+- Tinggal ganti logika web search dengan text chunking
+- Output tetap PDF, konsisten dengan workflow yang ada
+
+
+====================================================
+WORKFLOW BARU 2: Content Writer
+====================================================
+
+Endpoint : POST /content
+
+Ide:
+User input topik + target audience -> AI generate artikel/blog post -> export ke PDF
+
+Alur:
+User Input (topik + target audience + tone)
+      |
+      v
+Generate outline (heading + subheading)
+      |
+      v
+Generate isi konten per section
+      |
+      v
+Review & polish konten final
+      |
+      v
+Export ke PDF
+
+Catatan:
+- Memanfaatkan kembali generate_report-style prompt
+- Fokus ke konten kreatif, bukan riset
+- Output PDF, konsisten dengan workflow yang ada
+
+
+====================================================
+HAL-HAL YANG PERLU DIPERHATIKAN SAAT IMPLEMENTASI
+====================================================
+
+1. celery_app.py
+   Tambah module baru ke autodiscover_tasks:
+
+   celery_app.autodiscover_tasks([
+       "app.modules.research.tasks",
+       "app.modules.summarizer.tasks",   <- tambah
+       "app.modules.content.tasks",      <- tambah
+   ])
+
+2. main.py
+   Tambah endpoint baru dengan pola yang sama seperti /research:
+   - POST /summarize
+   - POST /content
+
+3. Output PDF
+   Pastikan nama file output-nya unik (gunakan uuid atau timestamp)
+   agar tidak saling overwrite antar workflow.
+   Contoh: output-{uuid4()}.pdf
+
+====================================================
